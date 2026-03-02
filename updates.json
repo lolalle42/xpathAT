@@ -4,16 +4,16 @@
       "updates": [
         {
           "version": "1.0.0",
-          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpathauto-1.0.0.xpi"
+          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpathautomator-1.0.0.xpi"
         },
         {
           "version": "2.0.0",
-          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpathauto-2.0.0.xpi"
+          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpathautomator-2.0.0.xpi"
         }
         ,
         {
           "version": "3.0.0",
-          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpathauto-3.0.0.xpi"
+          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpathautomator-3.0.0.xpi"
         }
       ]
     }
