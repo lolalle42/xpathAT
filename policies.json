@@ -1,0 +1,62 @@
+{
+  "policies": {
+
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisablePocket": true,
+    "DisableFirefoxAccounts": true,
+    "DisableAppUpdate": true,
+    "DisableFeedbackCommands": true,
+    "DisablePrivateBrowsing": false,
+
+    "DataReporting": {
+      "Enabled": false
+    },
+
+    "Extensions": {
+      "Install": [
+        "file:///C:/Users/admin_8/Downloads/zz/xpathautomator-4.0.0.xpi"
+      ],
+      "Locked": [
+        "myaddon@extension"
+      ]
+    },
+
+    "Preferences": {
+      "xpinstall.signatures.required": false,
+      "extensions.autoDisableScopes": 0,
+      "extensions.enabledScopes": 15,
+
+      "browser.cache.disk.enable": false,
+      "browser.cache.memory.enable": false,
+      "browser.cache.offline.enable": false,
+      "network.http.use-cache": false,
+
+      "browser.sessionstore.interval": 600000,
+
+      "browser.tabs.unloadOnLowMemory": true,
+      "browser.tabs.warnOnClose": false,
+
+      "browser.urlbar.speculativeConnect.enabled": false,
+
+      "network.prefetch-next": false,
+      "network.dns.disablePrefetch": true,
+
+      "toolkit.telemetry.enabled": false,
+      "toolkit.telemetry.unified": false,
+
+      "datareporting.healthreport.uploadEnabled": false,
+
+      "browser.shell.checkDefaultBrowser": false,
+
+      "browser.startup.homepage_override.mstone": "ignore",
+
+      "extensions.getAddons.cache.enabled": false,
+
+      "browser.discovery.enabled": false,
+
+      "browser.newtabpage.activity-stream.feeds.telemetry": false,
+      "browser.newtabpage.activity-stream.telemetry": false
+    }
+  }
+}
