@@ -1,0 +1,108 @@
+/******** AUTO-GENERATED FINGERPRINT IDENTITY ********/
+
+/*** USER AGENT ***/
+user_pref("general.useragent.override", "__UA__");
+user_pref("general.platform.override", "__PLATFORM__");
+user_pref("general.oscpu.override", "__OSCPU__");
+
+/*** LOCALE & LANGUAGE ***/
+user_pref("intl.accept_languages", "__LANG__");
+user_pref("intl.locale.requested", "__LOCALE__");
+
+/*** TIMEZONE ***/
+user_pref("intl.timezone.override", "__TIMEZONE__");
+
+/*** WINDOW SIZE ***/
+user_pref("privacy.window.maxInnerWidth", __WIN_W__);
+user_pref("privacy.window.maxInnerHeight", __WIN_H__);
+
+/*** SCREEN & UI ***/
+user_pref("layout.css.devPixelsPerPx", "__DPI__");
+user_pref("browser.display.color_depth", __COLOR_DEPTH__);
+user_pref("layout.css.device-pixel-ratio", "__DPR__");
+user_pref("screen.orientation.angle", __ORIENTATION_ANGLE__);
+user_pref("screen.orientation.type", "__ORIENTATION_TYPE__");
+
+/*** HARDWARE ***/
+user_pref("dom.maxHardwareConcurrency", __CORES__);
+
+/*** WEBGL & GPU STRINGS (browser-level only) ***/
+user_pref("webgl.disabled", __WEBGL__);
+user_pref("webgl.min_capability_mode", __WEBGLMIN__);
+user_pref("webgl.renderer-string-override", "__WEBGL_RENDERER__");
+user_pref("webgl.vendor-string-override", "__WEBGL_VENDOR__");
+
+/*** CANVAS NOISE SEED ***/
+user_pref("canvas.random_seed", "__CANVAS_SEED__");
+
+/*** FONTS ***/
+user_pref("browser.display.use_document_fonts", __DOCFONTS__);
+user_pref("gfx.downloadable_fonts.enabled", __DLFONTS__);
+user_pref("font.system.whitelist", "__FONT_WHITELIST__");
+
+/*** AUDIO ***/
+user_pref("media.webaudio.enabled", __WEBAUDIO__);
+user_pref("media.audio_sample_rate", __AUDIO_RATE__);
+
+/*** PERMISSIONS ***/
+user_pref("permissions.default.camera", __PERM_CAMERA__);
+user_pref("permissions.default.microphone", __PERM_MIC__);
+user_pref("permissions.default.geo", __PERM_GEO__);
+user_pref("permissions.default.desktop-notification", __PERM_NOTIF__);
+
+/*** MEDIA DEVICE IDS (browser-level fake strings) ***/
+user_pref("media.fake_device_id.audio", "__AUDIO_DEVICE_ID__");
+user_pref("media.fake_device_id.video", "__VIDEO_DEVICE_ID__");
+
+/*** OS BUILD STRINGS (browser-level only) ***/
+user_pref("general.buildID.override", "__OS_BUILD__");
+
+/*** ACCEPT-ENCODING HEADER ***/
+user_pref("network.http.accept-encoding", "__ACCEPT_ENCODING__");
+
+/*** COLOR PROFILE ***/
+user_pref("gfx.color_management.display_profile", "__COLOR_PROFILE__");
+
+/*** MIME SUPPORT FLAGS ***/
+user_pref("media.mime.audio", "__MIME_AUDIO__");
+user_pref("media.mime.video", "__MIME_VIDEO__");
+
+/*** PLUGIN LIST (browser-level fake list) ***/
+user_pref("plugin.fake_list", "__PLUGIN_LIST__");
+
+/*** TOUCH SUPPORT FLAGS ***/
+user_pref("dom.w3c_touch_events.enabled", __TOUCH__);
+
+/*** WEBRTC STATES ***/
+user_pref("media.peerconnection.enabled", __WEBRTC_ENABLED__);
+user_pref("media.peerconnection.ice.no_host", __WEBRTC_NO_HOST__);
+user_pref("media.peerconnection.ice.default_address_only", __WEBRTC_DEFAULT_ONLY__);
+
+/*** NAVIGATOR PROPERTIES ***/
+user_pref("general.appname.override", "__NAV_APPNAME__");
+user_pref("general.appversion.override", "__NAV_APPVERSION__");
+user_pref("general.buildID.override", "__NAV_BUILDID__");
+
+/*** BATTERY API VALUES ***/
+user_pref("dom.battery.fake_level", "__BATTERY_LEVEL__");
+user_pref("dom.battery.fake_charging", "__BATTERY_CHARGING__");
+
+/*** POINTER & HOVER CAPABILITIES ***/
+user_pref("dom.pointer_events.enabled", __POINTER_ENABLED__);
+user_pref("dom.hover_capability", "__HOVER_CAPABILITY__");
+
+/*** STORAGE ***/
+user_pref("dom.storage.enabled", true);
+user_pref("dom.indexedDB.enabled", true);
+/*** NETWORK PREFS EXCLUDED BY USER REQUEST ***/
+
+
+// Disable first-run welcome / onboarding
+user_pref("browser.startup.homepage_override.mstone", "ignore");
+user_pref("startup.homepage_welcome_url", "");
+user_pref("startup.homepage_welcome_url.additional", "");
+user_pref("browser.startup.homepage", "about:blank");
+user_pref("browser.aboutwelcome.enabled", false);
+
+
+/*** NETWORK PREFS EXCLUDED BY USER REQUEST ***/
