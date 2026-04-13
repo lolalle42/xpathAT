@@ -3,8 +3,8 @@
     "xpa@extension": {
       "updates": [
         {
-          "version": "0.0.5",
-          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpaextension-0.0.5.xpi"
+          "version": "0.0.7",
+          "update_link": "https://raw.githubusercontent.com/lolalle42/xpathAT/main/xpaextension-0.0.7.xpi"
         }
       ]
     }
