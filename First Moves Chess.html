@@ -1,0 +1,818 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>First Moves Chess</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: sticky top bar, then a two-column workspace (lesson list + board stage) that stacks on phones */
+:root{
+  --bg:#f1f5f4; --surface:#ffffff; --fg:#15262b; --muted:#566d72; --line:#d3dddc;
+  --accent:#0e7467; --accent-fg:#ffffff; --accent-soft:#dcefec;
+  --hi:#e0a114; --last:rgba(224,161,20,.38); --hintbg:rgba(14,116,103,.28);
+  --sq-l:#e2eae7; --sq-d:#7a9b97; --dot:rgba(21,38,43,.34);
+  --wp:#ffffff; --wp-line:#16252a; --bp:#16252a; --bp-line:#16252a;
+  --good:#1a7f45; --good-bg:#dff3e6; --warn:#9a5b00; --warn-bg:#fdf0d5; --bad:#b3261e; --bad-bg:#fbe4e1;
+  --font-head:'Space Grotesk','Inter',system-ui,sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-chess:'Segoe UI Symbol','Noto Sans Symbols 2','Apple Symbols','DejaVu Sans','Arial Unicode MS',serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1517; --surface:#162124; --fg:#e5eeed; --muted:#93a9ac; --line:#28393d;
+  --accent:#43b9ab; --accent-fg:#06201d; --accent-soft:#17332f;
+  --hi:#f0b429; --last:rgba(240,180,41,.34); --hintbg:rgba(67,185,171,.34);
+  --sq-l:#a9c0bc; --sq-d:#4c6a67; --dot:rgba(10,20,22,.45);
+  --wp:#ffffff; --wp-line:#0b1416; --bp:#0b1416; --bp-line:#0b1416;
+  --good:#5fd08a; --good-bg:#16301f; --warn:#f0b429; --warn-bg:#352a0f; --bad:#ff8f86; --bad-bg:#3a1b19; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0e1517; --surface:#162124; --fg:#e5eeed; --muted:#93a9ac; --line:#28393d;
+  --accent:#43b9ab; --accent-fg:#06201d; --accent-soft:#17332f;
+  --hi:#f0b429; --last:rgba(240,180,41,.34); --hintbg:rgba(67,185,171,.34);
+  --sq-l:#a9c0bc; --sq-d:#4c6a67; --dot:rgba(10,20,22,.45);
+  --wp:#ffffff; --wp-line:#0b1416; --bp:#0b1416; --bp-line:#0b1416;
+  --good:#5fd08a; --good-bg:#16301f; --warn:#f0b429; --warn-bg:#352a0f; --bad:#ff8f86; --bad-bg:#3a1b19; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--font-body);min-height:100vh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:70rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-head);line-height:1.2;text-wrap:balance;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-block:.6rem;flex-wrap:wrap}
+.brand{color:var(--fg);text-decoration:none;font:700 1.15rem var(--font-head);display:flex;align-items:center;gap:.5rem;letter-spacing:-.01em}
+.brand .mark{font:1.5rem var(--font-chess);color:var(--accent)}
+.tabs{display:flex;gap:.25rem;background:var(--bg);padding:.25rem;border-radius:.6rem}
+.tabs button{border:0;background:none;padding:.4rem 1.1rem;border-radius:.45rem;cursor:pointer;font-weight:600;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+main{padding-block:1.5rem 3rem}
+
+.layout{display:grid;grid-template-columns:15.5rem minmax(0,1fr);gap:1.5rem;align-items:start}
+.lesson-nav{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.25rem;position:sticky;top:5rem}
+.lesson-nav button{width:100%;text-align:left;display:flex;gap:.7rem;align-items:center;padding:.55rem .7rem;border:1px solid transparent;border-radius:.6rem;background:none;cursor:pointer;color:var(--fg)}
+.lesson-nav button:hover{background:var(--surface)}
+.lesson-nav button[aria-current="true"]{background:var(--surface);border-color:var(--line);font-weight:600}
+.lesson-nav .n{flex:none;width:1.6rem;height:1.6rem;border-radius:50%;display:grid;place-items:center;font:600 .78rem var(--font-head);background:var(--line);color:var(--muted)}
+.lesson-nav .done .n{background:var(--good);color:#fff}
+.lesson-nav [aria-current="true"] .n{background:var(--accent);color:var(--accent-fg)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(16rem,20rem);gap:1.5rem;align-items:start}
+.stage>*{min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:.9rem;padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.85rem}
+.panel h2{font-size:1.35rem}
+.panel h3{font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.panel .body{display:flex;flex-direction:column;gap:.7rem}
+.panel ul{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:.3rem}
+.muted{color:var(--muted)}
+.task{border-left:4px solid var(--accent);background:var(--accent-soft);padding:.7rem .9rem;border-radius:.3rem .6rem .6rem .3rem}
+.task b{font-family:var(--font-head)}
+.msg{padding:.7rem .9rem;border-radius:.6rem;background:var(--bg);border:1px solid var(--line)}
+.msg.good{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.msg.warn{background:var(--warn-bg);border-color:transparent;color:var(--warn)}
+.msg.bad{background:var(--bad-bg);border-color:transparent;color:var(--bad)}
+.msg strong{font-weight:700}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);padding:.5rem .95rem;border-radius:.55rem;cursor:pointer;font-weight:600}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+.field{display:flex;flex-direction:column;gap:.25rem;font-size:.85rem;color:var(--muted)}
+select{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:.5rem;padding:.4rem .5rem}
+label.chk{display:flex;gap:.5rem;align-items:center;cursor:pointer}
+.vals{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.vals div{border:1px solid var(--line);border-radius:.6rem;padding:.5rem;text-align:center}
+.vals .g{font:2rem var(--font-chess);line-height:1.1;color:var(--bp)}
+.vals b{display:block;font-family:var(--font-head)}
+
+/* board */
+.board-wrap{display:flex;flex-direction:column;gap:.6rem;min-width:0}
+.board{container-type:inline-size;width:100%;max-width:37rem;aspect-ratio:1;display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:.5rem;overflow:hidden;border:2px solid var(--fg);touch-action:manipulation}
+.sq{position:relative;border:0;padding:0;margin:0;display:grid;place-items:center;cursor:pointer;background:var(--sq-l);font-family:var(--font-chess);font-size:9.4cqw;line-height:1;min-width:0;min-height:0}
+.sq.d{background:var(--sq-d)}
+.sq.last{background-image:linear-gradient(var(--last),var(--last))}
+.sq.hint{background-image:linear-gradient(var(--hintbg),var(--hintbg));box-shadow:inset 0 0 0 .6cqw var(--accent)}
+.sq.sel{box-shadow:inset 0 0 0 .8cqw var(--hi);background-image:linear-gradient(var(--last),var(--last))}
+.sq.chk{background-image:radial-gradient(circle,rgba(220,38,38,.85) 0,rgba(220,38,38,.35) 55%,transparent 75%)}
+.sq.dest::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:var(--dot)}
+.sq.dest.cap::after{width:92%;height:92%;background:none;border:.9cqw solid var(--dot)}
+.sq.goal::before{content:"";position:absolute;inset:12%;border-radius:50%;border:.7cqw dashed var(--accent);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(.88);opacity:.6}}
+@media (prefers-reduced-motion:reduce){.sq.goal::before{animation:none}}
+.piece{position:relative;z-index:1;pointer-events:none;-webkit-text-stroke:.35cqw var(--bp-line);paint-order:stroke fill}
+.piece.w{color:var(--wp);-webkit-text-stroke-color:var(--wp-line)}
+.piece.b{color:var(--bp);-webkit-text-stroke:.2cqw var(--bp-line)}
+.co{position:absolute;font:600 max(9px,2.3cqw) var(--font-body);opacity:.8;pointer-events:none;z-index:0;color:var(--sq-d)}
+.sq.d .co{color:var(--sq-l)}
+.co.r{top:.4cqw;left:.5cqw}.co.f{bottom:.3cqw;right:.5cqw}
+.caps{display:flex;gap:.4rem;align-items:center;min-height:1.9rem;font:1.35rem var(--font-chess);color:var(--bp);flex-wrap:wrap}
+.caps .w{color:var(--wp);-webkit-text-stroke:.5px var(--wp-line)}
+.caps small{font:600 .75rem var(--font-body);color:var(--muted);margin-left:.25rem}
+.moves{display:grid;grid-template-columns:2.2rem 1fr 1fr;gap:.15rem .5rem;max-height:11rem;overflow:auto;font-variant-numeric:tabular-nums;font-size:.9rem}
+.moves .no{color:var(--muted)}
+.moves .cur{font-weight:700;color:var(--accent)}
+.settings{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.intro{max-width:44rem;margin-bottom:1.2rem;display:flex;flex-direction:column;gap:.4rem}
+.intro h1{font-size:clamp(1.6rem,4vw,2.2rem);letter-spacing:-.02em}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .lesson-nav{position:static;flex-direction:row;flex-wrap:wrap}
+  .lesson-nav button{width:auto;padding:.35rem .6rem}
+  .lesson-nav .t{display:none}
+  .lesson-nav [aria-current="true"] .t{display:inline}
+  .stage{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+<header class="top"><div class="wrap bar">
+  <a class="brand" href="#learn"><span class="mark" aria-hidden="true">&#9822;&#xFE0E;</span> First Moves Chess</a>
+  <nav class="tabs" aria-label="Sections">
+    <button type="button" id="tab-learn" data-tab="learn">Learn</button>
+    <button type="button" id="tab-play" data-tab="play">Play</button>
+  </nav>
+</div></header>
+<main class="wrap">
+  <section id="learn">
+    <div class="intro">
+      <h1>Learn chess in eleven short lessons</h1>
+      <p class="muted">Each lesson explains one idea, then lets you try it on a real board. Click a piece to see where it can go.</p>
+    </div>
+    <div class="layout">
+      <ol class="lesson-nav" id="lessonNav" aria-label="Lessons"></ol>
+      <div class="stage" id="lessonStage"></div>
+    </div>
+  </section>
+  <section id="play" hidden>
+    <div class="intro">
+      <h1>Play a practice game</h1>
+      <p class="muted">The coach warns you about hanging pieces and the Hint button suggests a move. Undo as often as you like.</p>
+    </div>
+    <div class="stage">
+      <div class="board-wrap">
+        <div class="caps" id="capTop" aria-label="Pieces captured by the computer"></div>
+        <div class="board" id="playBoard" role="grid" aria-label="Chess board"></div>
+        <div class="caps" id="capBottom" aria-label="Pieces you captured"></div>
+      </div>
+      <div class="panel">
+        <h3>Coach</h3>
+        <div class="msg" id="coach" role="status" aria-live="polite"></div>
+        <div class="row">
+          <button type="button" class="btn primary" id="hintBtn">Hint</button>
+          <button type="button" class="btn" id="undoBtn">Undo</button>
+          <button type="button" class="btn" id="newBtn">New game</button>
+        </div>
+        <div class="settings">
+          <div class="field"><label for="side">You play</label>
+            <select id="side"><option value="w">White</option><option value="b">Black</option></select></div>
+          <div class="field"><label for="level">Computer level</label>
+            <select id="level"><option value="1">Easy</option><option value="2" selected>Medium</option><option value="3">Harder</option></select></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="showMoves" checked> Show where a piece can go</label>
+        <label class="chk"><input type="checkbox" id="showTips" checked> Coach warnings and tips</label>
+        <h3>Moves</h3>
+        <div class="moves" id="moveList"><span class="muted">No moves yet.</span></div>
+        <p class="muted" style="font-size:.85rem">Pawns that reach the last row become a queen automatically.</p>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+/* ---------- Chess engine (board: 64 squares, index = rank-from-top*8 + file) ---------- */
+const FILES = 'abcdefgh';
+const sqName = i => FILES[i & 7] + (8 - (i >> 3));
+const sqIndex = s => (8 - parseInt(s[1], 10)) * 8 + FILES.indexOf(s[0]);
+const isWhitePiece = p => p !== '' && p === p.toUpperCase();
+const colorOf = p => (p === '' ? null : isWhitePiece(p) ? 'w' : 'b');
+const KN = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+const KG = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const RD = [[-1,0],[1,0],[0,-1],[0,1]];
+const BD = [[-1,-1],[-1,1],[1,-1],[1,1]];
+
+function parseFen(fen) {
+  const [place, turn = 'w', cast = '-', ep = '-'] = fen.split(' ');
+  const b = [];
+  for (const ch of place) {
+    if (ch === '/') continue;
+    if (/\d/.test(ch)) for (let i = 0; i < +ch; i++) b.push('');
+    else b.push(ch);
+  }
+  return { b, t: turn, c: cast === '-' ? '' : cast, ep: ep === '-' ? -1 : sqIndex(ep) };
+}
+const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -';
+const startState = () => parseFen(START_FEN);
+
+function attacked(b, sq, by) {
+  const r = sq >> 3, c = sq & 7;
+  const own = (p, t) => p !== '' && (by === 'w' ? p === t.toUpperCase() : p === t);
+  const pr = by === 'w' ? r + 1 : r - 1;
+  if (pr >= 0 && pr < 8) for (const dc of [-1, 1]) {
+    const cc = c + dc;
+    if (cc >= 0 && cc < 8 && own(b[pr * 8 + cc], 'p')) return true;
+  }
+  for (const [dr, dc] of KN) {
+    const rr = r + dr, cc = c + dc;
+    if (rr >= 0 && rr < 8 && cc >= 0 && cc < 8 && own(b[rr * 8 + cc], 'n')) return true;
+  }
+  for (const [dr, dc] of KG) {
+    const rr = r + dr, cc = c + dc;
+    if (rr >= 0 && rr < 8 && cc >= 0 && cc < 8 && own(b[rr * 8 + cc], 'k')) return true;
+  }
+  const slide = (dirs, t1, t2) => {
+    for (const [dr, dc] of dirs) {
+      let rr = r + dr, cc = c + dc;
+      while (rr >= 0 && rr < 8 && cc >= 0 && cc < 8) {
+        const p = b[rr * 8 + cc];
+        if (p !== '') { if (own(p, t1) || own(p, t2)) return true; break; }
+        rr += dr; cc += dc;
+      }
+    }
+    return false;
+  };
+  return slide(RD, 'r', 'q') || slide(BD, 'b', 'q');
+}
+const kingSq = (b, t) => b.indexOf(t === 'w' ? 'K' : 'k');
+function inCheck(s, t = s.t) {
+  const k = kingSq(s.b, t);
+  return k >= 0 && attacked(s.b, k, t === 'w' ? 'b' : 'w');
+}
+
+function pseudo(s) {
+  const { b, t } = s, w = t === 'w', out = [];
+  const enemy = p => p !== '' && colorOf(p) !== t;
+  for (let i = 0; i < 64; i++) {
+    const p = b[i];
+    if (p === '' || colorOf(p) !== t) continue;
+    const r = i >> 3, c = i & 7, k = p.toLowerCase();
+    if (k === 'p') {
+      const dir = w ? -1 : 1, start = w ? 6 : 1, last = w ? 0 : 7;
+      const add = (to, extra = {}) => out.push({ from: i, to, piece: p, cap: b[to] || '', promo: (to >> 3) === last, ...extra });
+      const f = (r + dir) * 8 + c;
+      if (r + dir >= 0 && r + dir < 8 && b[f] === '') {
+        add(f);
+        if (r === start && b[f + dir * 8] === '') add(f + dir * 8, { dbl: true });
+      }
+      for (const dc of [-1, 1]) {
+        const cc = c + dc, rr = r + dir;
+        if (cc < 0 || cc > 7 || rr < 0 || rr > 7) continue;
+        const to = rr * 8 + cc;
+        if (enemy(b[to])) add(to);
+        else if (to === s.ep) add(to, { ep: true, cap: w ? 'p' : 'P' });
+      }
+    } else if (k === 'n' || k === 'k') {
+      for (const [dr, dc] of k === 'n' ? KN : KG) {
+        const rr = r + dr, cc = c + dc;
+        if (rr < 0 || rr > 7 || cc < 0 || cc > 7) continue;
+        const to = rr * 8 + cc;
+        if (b[to] === '' || enemy(b[to])) out.push({ from: i, to, piece: p, cap: b[to] || '' });
+      }
+      if (k === 'k') {
+        const home = w ? 60 : 4, opp = w ? 'b' : 'w';
+        if (i === home && !attacked(b, i, opp)) {
+          const ks = w ? 'K' : 'k', qs = w ? 'Q' : 'q', rk = w ? 'R' : 'r';
+          if (s.c.includes(ks) && b[home + 3] === rk && b[home + 1] === '' && b[home + 2] === '' &&
+              !attacked(b, home + 1, opp))
+            out.push({ from: i, to: home + 2, piece: p, cap: '', castle: 'K' });
+          if (s.c.includes(qs) && b[home - 4] === rk && b[home - 1] === '' && b[home - 2] === '' && b[home - 3] === '' &&
+              !attacked(b, home - 1, opp))
+            out.push({ from: i, to: home - 2, piece: p, cap: '', castle: 'Q' });
+        }
+      }
+    } else {
+      const dirs = k === 'r' ? RD : k === 'b' ? BD : RD.concat(BD);
+      for (const [dr, dc] of dirs) {
+        let rr = r + dr, cc = c + dc;
+        while (rr >= 0 && rr < 8 && cc >= 0 && cc < 8) {
+          const to = rr * 8 + cc;
+          if (b[to] === '') out.push({ from: i, to, piece: p, cap: '' });
+          else { if (enemy(b[to])) out.push({ from: i, to, piece: p, cap: b[to] }); break; }
+          rr += dr; cc += dc;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+const RIGHTS = { 60: 'KQ', 63: 'K', 56: 'Q', 4: 'kq', 7: 'k', 0: 'q' };
+function makeMove(s, m) {
+  const b = s.b.slice();
+  b[m.to] = m.promo ? (s.t === 'w' ? 'Q' : 'q') : m.piece;
+  b[m.from] = '';
+  if (m.ep) b[m.to + (s.t === 'w' ? 8 : -8)] = '';
+  if (m.castle === 'K') { b[m.to - 1] = b[m.to + 1]; b[m.to + 1] = ''; }
+  if (m.castle === 'Q') { b[m.to + 1] = b[m.to - 2]; b[m.to - 2] = ''; }
+  let c = s.c;
+  for (const sq of [m.from, m.to]) if (RIGHTS[sq]) for (const ch of RIGHTS[sq]) c = c.replace(ch, '');
+  const ep = m.dbl ? (m.from + m.to) / 2 : -1;
+  return { b, t: s.t === 'w' ? 'b' : 'w', c, ep };
+}
+function legalMoves(s) {
+  return pseudo(s).filter(m => !inCheck(makeMove(s, m), s.t));
+}
+function gameStatus(s, moves = legalMoves(s)) {
+  const chk = inCheck(s);
+  if (moves.length === 0) return chk ? 'checkmate' : 'stalemate';
+  const pieces = s.b.filter(p => p !== '' && p.toLowerCase() !== 'k');
+  if (pieces.length === 0) return 'draw';
+  return chk ? 'check' : 'playing';
+}
+function perft(s, d) {
+  if (d === 0) return 1;
+  let n = 0;
+  for (const m of legalMoves(s)) n += d === 1 ? 1 : perft(makeMove(s, m), d - 1);
+  return n;
+}
+
+/* Standard-ish notation for the move list */
+function notate(s, m, moves) {
+  let t;
+  if (m.castle) t = m.castle === 'K' ? 'O-O' : 'O-O-O';
+  else {
+    const k = m.piece.toLowerCase();
+    t = k === 'p' ? (m.cap ? FILES[m.from & 7] + 'x' : '') : k.toUpperCase();
+    if (k !== 'p') {
+      const twins = moves.filter(o => o.piece === m.piece && o.to === m.to && o.from !== m.from);
+      if (twins.length) t += twins.some(o => (o.from & 7) === (m.from & 7)) ? 8 - (m.from >> 3) : FILES[m.from & 7];
+      if (m.cap) t += 'x';
+    }
+    t += sqName(m.to);
+    if (m.promo) t += '=Q';
+  }
+  const n = makeMove(s, m);
+  const st = gameStatus(n);
+  return t + (st === 'checkmate' ? '#' : st === 'check' ? '+' : '');
+}
+
+/* ---------- Beginner-friendly opponent ---------- */
+const VAL = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+function evalState(s) {
+  let v = 0;
+  for (let i = 0; i < 64; i++) {
+    const p = s.b[i];
+    if (p === '') continue;
+    const k = p.toLowerCase(), r = i >> 3, c = i & 7;
+    let x = VAL[k];
+    const center = 3.5 - Math.max(Math.abs(c - 3.5), Math.abs(r - 3.5)) ; // 0..3
+    if (k === 'n' || k === 'b') x += center * 6;
+    if (k === 'p') x += (isWhitePiece(p) ? 6 - r : r - 1) * 4 + center * 2;
+    v += isWhitePiece(p) ? x : -x;
+  }
+  return v;
+}
+function search(s, depth, alpha, beta) {
+  const moves = legalMoves(s);
+  if (moves.length === 0) return inCheck(s) ? -100000 - depth : 0;
+  if (depth === 0) return (s.t === 'w' ? 1 : -1) * evalState(s);
+  moves.sort((a, b) => VAL[(b.cap || 'x').toLowerCase()] - VAL[(a.cap || 'x').toLowerCase()] || 0);
+  let best = -Infinity;
+  for (const m of moves) {
+    const v = -search(makeMove(s, m), depth - 1, -beta, -alpha);
+    if (v > best) best = v;
+    if (v > alpha) alpha = v;
+    if (alpha >= beta) break;
+  }
+  return best;
+}
+/* level 1 easy, 2 medium, 3 harder */
+function chooseMove(s, level = 2, moves = legalMoves(s)) {
+  if (!moves.length) return null;
+  if (level === 1 && Math.random() < 0.4) return moves[Math.floor(Math.random() * moves.length)];
+  const depth = level === 3 ? 3 : level === 2 ? 2 : 1;
+  const noise = level === 1 ? 60 : level === 2 ? 25 : 5;
+  let best = null, bv = -Infinity;
+  for (const m of moves) {
+    const v = -search(makeMove(s, m), depth - 1, -Infinity, Infinity) + (Math.random() - 0.5) * noise;
+    if (v > bv) { bv = v; best = m; }
+  }
+  return best;
+}
+/* Strongest reasonable suggestion for the hint button */
+const hintMove = s => {
+  const all = legalMoves(s);
+  const calm = all.filter(m => !(m.piece.toLowerCase() === 'q' && !m.cap && m.from === (s.t === 'w' ? 59 : 3)));
+  return chooseMove(s, 3, calm.length ? calm : all);
+};
+
+if (typeof module !== 'undefined') module.exports = { parseFen, startState, legalMoves, makeMove, perft, gameStatus, chooseMove, notate, inCheck, sqIndex, sqName };
+/* ---------- Interactive board ---------- */
+const GLYPH = { k:'♚︎', q:'♛︎', r:'♜︎', b:'♝︎', n:'♞︎', p:'♟︎' };
+const PNAME = { k:'king', q:'queen', r:'rook', b:'bishop', n:'knight', p:'pawn' };
+const RULE = {
+  p:'Pawns move straight forward one square (two from their starting square) and capture one square diagonally forward.',
+  n:'Knights move in an L: two squares one way and one square sideways. They are the only piece that can jump over others.',
+  b:'Bishops slide any distance along diagonals and cannot jump over pieces.',
+  r:'Rooks slide any distance in straight lines (forward, back, left or right) and cannot jump over pieces.',
+  q:'The queen slides any distance like a rook and a bishop combined.',
+  k:'The king moves one square in any direction, never onto a square an enemy piece attacks.'
+};
+
+class Board {
+  /* cfg: state, flip, showMoves, canSelect(piece)->bool, onMove(move), onReject(from,to,why), onSquare(sq)->bool, goals[] */
+  constructor(root, cfg) {
+    this.root = root; this.cfg = cfg;
+    this.state = cfg.state; this.flip = !!cfg.flip;
+    this.sel = -1; this.last = null; this.hint = null; this.goals = cfg.goals || [];
+    this.locked = false; this.showMoves = cfg.showMoves !== false;
+    root.addEventListener('click', e => {
+      const b = e.target.closest('.sq'); if (b && root.contains(b)) this.click(+b.dataset.sq);
+    });
+    this.render();
+  }
+  set(state, opts = {}) {
+    this.state = state; this.sel = -1; this.last = opts.last || null; this.hint = opts.hint || null;
+    if (opts.goals) this.goals = opts.goals;
+    this.render();
+  }
+  dests() { return this.sel < 0 ? [] : legalMoves(this.state).filter(m => m.from === this.sel); }
+  click(sq) {
+    if (this.locked) return;
+    if (this.cfg.onSquare && this.cfg.onSquare(sq)) return;
+    const p = this.state.b[sq];
+    if (this.sel >= 0) {
+      const m = this.dests().find(x => x.to === sq);
+      if (m) { this.sel = -1; this.cfg.onMove(m); return; }
+      if (p !== '' && colorOf(p) === this.state.t && (!this.cfg.canSelect || this.cfg.canSelect(p))) {
+        this.sel = sq === this.sel ? -1 : sq; this.hint = null; this.render(); return;
+      }
+      const from = this.sel;
+      if (sq !== from) this.cfg.onReject && this.cfg.onReject(from, sq, this.why(from, sq));
+      this.sel = -1; this.render(); return;
+    }
+    if (p !== '' && colorOf(p) === this.state.t) {
+      if (this.cfg.canSelect && !this.cfg.canSelect(p)) { this.cfg.onReject && this.cfg.onReject(-1, sq, 'It is not your turn to move that piece.'); return; }
+      this.sel = sq; this.hint = null; this.render();
+    } else if (p !== '') this.cfg.onReject && this.cfg.onReject(-1, sq, 'That is an enemy piece. Click one of your own pieces first.');
+  }
+  why(from, to) {
+    const s = this.state, p = s.b[from];
+    if (s.b[to] !== '' && colorOf(s.b[to]) === colorOf(p)) return 'That square is occupied by your own piece.';
+    if (pseudo(s).some(m => m.from === from && m.to === to)) {
+      if (p.toLowerCase() === 'k') return 'The king cannot move onto a square that an enemy piece attacks.';
+      return inCheck(s) ? 'Your king is in check, and that move does not fix it.' : 'That move would leave your king in check, so it is not allowed.';
+    }
+    return RULE[p.toLowerCase()];
+  }
+  render() {
+    const s = this.state, d = this.sel >= 0 ? this.dests() : [];
+    const dm = new Map(d.map(m => [m.to, m]));
+    const chk = inCheck(s) ? kingSq(s.b, s.t) : -1;
+    let h = '';
+    for (let i = 0; i < 64; i++) {
+      const sq = this.flip ? 63 - i : i, r = sq >> 3, c = sq & 7, p = s.b[sq];
+      const cls = ['sq', (r + c) % 2 ? 'd' : ''];
+      if (sq === this.sel) cls.push('sel');
+      if (this.last && (this.last.from === sq || this.last.to === sq)) cls.push('last');
+      if (this.hint && (this.hint.from === sq || this.hint.to === sq)) cls.push('hint');
+      if (sq === chk) cls.push('chk');
+      if (dm.has(sq) && this.showMoves) cls.push('dest', dm.get(sq).cap ? 'cap' : '');
+      if (this.goals.includes(sq)) cls.push('goal');
+      const label = sqName(sq) + (p ? ' ' + (colorOf(p) === 'w' ? 'white ' : 'black ') + PNAME[p.toLowerCase()] : ' empty');
+      const co = (i % 8 === 0 ? `<span class="co r">${8 - r}</span>` : '') + (i >= 56 ? `<span class="co f">${FILES[c]}</span>` : '');
+      h += `<button type="button" class="${cls.filter(Boolean).join(' ')}" data-sq="${sq}" aria-label="${label}">${co}` +
+           (p ? `<span class="piece ${colorOf(p)}">${GLYPH[p.toLowerCase()]}</span>` : '') + '</button>';
+    }
+    this.root.innerHTML = h;
+  }
+}
+/* ---------- Lessons ---------- */
+/* goal types: to (reach one of the squares), mate, castle, ep, any, click */
+const LESSONS = [
+  { id:'board', title:'The board and the goal', blurb:'Squares, colors and what winning means.',
+    body:[
+      '<p>Chess is played on 64 squares, 8 by 8. Each square has a name: a letter for the file (column) and a number for the rank (row). The square in the bottom-right corner for White is <b>h1</b>.</p>',
+      '<p>Two armies, white and black, take turns. <b>White always moves first.</b> Every piece has its own way of moving, and you capture by landing on an enemy piece.</p>',
+      '<p>The goal is <b>checkmate</b>: attack the enemy king so it has no escape. You never actually capture the king.</p>'],
+    tasks:[
+      { fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', prompt:'Click the square <b>e4</b>.', goal:{ click:'e4' }, ok:'That is e4: file e, rank 4. Each square has its own name, which is how moves are written down.' },
+      { fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', prompt:'Click the square <b>h1</b>, the bottom-right corner.', goal:{ click:'h1' }, ok:'Correct. Remember: the bottom-right square is always light-colored, and your own corner.' }] },
+  { id:'pawn', title:'The pawn', blurb:'Small, but it can become a queen.',
+    body:[
+      '<p>Pawns move <b>straight forward</b>, one square at a time. From their starting square they may move two squares.</p>',
+      '<p>Pawns <b>capture diagonally</b>, one square forward. A pawn cannot capture the piece directly in front of it; that blocks it.</p>',
+      '<p>If a pawn reaches the far end of the board it is <b>promoted</b>, usually to a queen.</p>'],
+    tasks:[
+      { fen:'8/8/8/8/8/8/4P3/8 w - -', prompt:'Move the pawn two squares forward to <b>e4</b>.', goal:{ to:['e4'] }, show:true, ok:'Nice. A pawn can move two squares, but only on its first move.' },
+      { fen:'8/8/8/3p4/4P3/8/8/8 w - -', prompt:'Capture the black pawn with your pawn.', goal:{ to:['d5'] }, show:true, ok:'Captured. Pawns take diagonally, not straight ahead.' },
+      { fen:'8/P7/8/8/8/8/8/8 w - -', prompt:'Push the pawn to the last row to promote it.', goal:{ to:['a8'] }, show:true, ok:'Promoted. It turned into a queen, the strongest piece.' }] },
+  { id:'rook', title:'The rook', blurb:'Straight lines, any distance.',
+    body:[
+      '<p>The rook moves in <b>straight lines</b>: forward, backward, left or right, as far as it likes. It stops when it meets a piece. It can capture an enemy piece there but cannot jump over anything.</p>',
+      '<p>Rooks are worth about <b>5 pawns</b>. They get strong when the board opens up.</p>'],
+    tasks:[
+      { fen:'8/3p4/8/8/3R4/8/8/8 w - -', prompt:'Capture the black pawn with your rook.', goal:{ to:['d7'] }, show:true, ok:'The rook slid straight up the file and captured.' },
+      { fen:'8/8/8/8/8/P7/8/R6n w - -', prompt:'Capture the black knight along the bottom rank.', goal:{ to:['h1'] }, show:true, ok:'Good. Your pawn on a3 does not matter here, because the rook went sideways.' }] },
+  { id:'bishop', title:'The bishop', blurb:'Diagonals, and always the same color.',
+    body:[
+      '<p>The bishop moves <b>diagonally</b> any distance. Because of this it stays on the same color of square for the whole game. Each side has one light-squared and one dark-squared bishop.</p>',
+      '<p>Bishops are worth about <b>3 pawns</b>.</p>'],
+    tasks:[
+      { fen:'8/8/7p/8/8/8/8/2B5 w - -', prompt:'Capture the pawn on h6.', goal:{ to:['h6'] }, show:true, ok:'The diagonal from c1 reaches h6. Nicely spotted.' },
+      { fen:'8/8/8/8/8/8/8/5B2 w - -', prompt:'Move the bishop all the way to <b>a6</b>.', goal:{ to:['a6'] }, show:true, ok:'One long diagonal move. Bishops can travel the full length of the board.' }] },
+  { id:'queen', title:'The queen', blurb:'The most powerful piece.',
+    body:[
+      '<p>The queen moves like a <b>rook and a bishop combined</b>: any distance in a straight line or diagonal. She is worth about <b>9 pawns</b>.</p>',
+      '<p>Because she is so valuable, avoid trading her for a lesser piece and avoid bringing her out too early, where she can be chased.</p>'],
+    tasks:[
+      { fen:'8/8/1n6/8/3Q4/8/8/8 w - -', prompt:'Capture the black knight with your queen.', goal:{ to:['b6'] }, show:true, ok:'A diagonal capture. The queen could have gone in a straight line too.' },
+      { fen:'8/8/8/8/8/8/8/3Q4 w - -', prompt:'Move the queen diagonally to <b>h5</b>.', goal:{ to:['h5'] }, show:true, ok:'Good. This is the same diagonal you may know from the opening.' }] },
+  { id:'knight', title:'The knight', blurb:'The L-shaped jumper.',
+    body:[
+      '<p>The knight moves in an <b>L shape</b>: two squares in one direction, then one square sideways. It is the only piece that can <b>jump over</b> other pieces.</p>',
+      '<p>Knights are worth about <b>3 pawns</b> and are best near the center.</p>'],
+    tasks:[
+      { fen:'8/8/8/8/8/8/8/6N1 w - -', prompt:'Move the knight from g1 to <b>f3</b>.', goal:{ to:['f3'] }, show:true, ok:'Nf3 is one of the most common first moves in chess.' },
+      { fen:'8/8/8/8/8/8/PPPPPPPP/1N6 w - -', prompt:'Your knight is surrounded by pawns. Jump out to <b>c3</b>.', goal:{ to:['c3'] }, show:true, ok:'It jumped right over the pawns. Nothing else can do that.' },
+      { fen:'8/8/5p2/8/4N3/8/8/8 w - -', prompt:'Capture the black pawn with your knight.', goal:{ to:['f6'] }, show:true, ok:'Captured with an L-shaped jump.' }] },
+  { id:'king', title:'The king', blurb:'Slow, precious, and never in danger.',
+    body:[
+      '<p>The king moves <b>one square in any direction</b>. It is the most important piece: if it is trapped, you lose.</p>',
+      '<p>The king can <b>never move onto a square that an enemy piece attacks</b>. Try it below.</p>'],
+    tasks:[
+      { fen:'8/8/8/8/4K3/8/8/8 w - -', prompt:'Move the king to <b>d5</b>.', goal:{ to:['d5'] }, show:true, ok:'One step diagonally.' },
+      { fen:'3r4/8/8/8/8/8/8/4K3 w - -', prompt:'The black rook guards the whole d-file. Try stepping to <b>d1</b> first, then move the king to <b>f1</b>.', goal:{ to:['f1','f2','e2'] }, ok:'The king stays out of the rook\'s line. That is exactly the rule.', showMsgOnReject:true }] },
+  { id:'check', title:'Check and checkmate', blurb:'Attack the king; trap it.',
+    body:[
+      '<p>When a king is attacked, it is in <b>check</b>. The player in check must get out of it at once: move the king, block the attack, or capture the attacker.</p>',
+      '<p>If there is no way out, that is <b>checkmate</b> and the game is over. If a player has no legal move but is <b>not</b> in check, it is a draw called <b>stalemate</b>.</p>'],
+    tasks:[
+      { fen:'4r3/8/8/8/8/8/8/4K3 w - -', prompt:'Your king is in check from the rook. Move it out of check.', goal:{ any:true }, ok:'Safe. Any move that leaves the king unattacked works.' },
+      { fen:'6k1/5ppp/8/8/8/8/8/R3K3 w - -', prompt:'Checkmate in one: the black king is boxed in by its own pawns. Find the mating move.', goal:{ mate:true }, ok:'Checkmate! This is called a back-rank mate.' },
+      { fen:'k7/8/1K6/8/8/8/8/7Q w - -', prompt:'Checkmate in one with the queen.', goal:{ mate:true }, ok:'Checkmate. The king guards a7 and b7 while the queen covers the back rank.' }] },
+  { id:'special', title:'Special moves', blurb:'Castling and en passant.',
+    body:[
+      '<p><b>Castling</b> moves your king two squares toward a rook, and the rook jumps to the other side. It tucks the king away and activates the rook. You can castle only if neither piece has moved, the squares between are empty, and the king is not in check or passing through an attacked square.</p>',
+      '<p><b>En passant</b> is a pawn capture you only get right after an enemy pawn moves two squares and lands beside yours. You capture it as if it had moved just one.</p>'],
+    tasks:[
+      { fen:'r3k2r/8/8/8/8/8/8/R3K2R w KQkq -', prompt:'Castle kingside by moving the king two squares to the right.', goal:{ castle:true }, show:true, ok:'Castled. The king is tucked into the corner and the rook is active.' },
+      { fen:'8/8/8/3pP3/8/8/8/8 w - d6', prompt:'Black just moved the d-pawn two squares. Capture it en passant.', goal:{ ep:true }, show:true, ok:'En passant! You captured the pawn as if it moved one square.' }] },
+  { id:'start', title:'How to start a game', blurb:'Three simple opening rules.',
+    body:[
+      '<p>You do not need to memorize openings. Follow three ideas:</p>',
+      '<ul><li><b>Control the center</b> with pawns on e4 or d4.</li><li><b>Develop your pieces:</b> bring out knights and bishops before anything else.</li><li><b>Castle early</b> to protect your king.</li></ul>',
+      '<p>Avoid moving the same piece twice and avoid bringing the queen out early.</p>'],
+    tasks:[
+      { fen:'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -', prompt:'Play a strong first move: push the king or queen pawn two squares (<b>e4</b> or <b>d4</b>).', goal:{ to:['e4','d4'], piece:'P' }, ok:'A great start. That pawn controls the center and opens lines for your pieces.' }] },
+  { id:'values', title:'What pieces are worth', blurb:'Know when a trade is good.',
+    body:[
+      '<p>Pieces have rough values. Before you capture or trade, add up what you win and lose.</p>',
+      '<div class="vals"><div><span class="g">♟︎</span><b>Pawn</b>1</div><div><span class="g">♞︎</span><b>Knight</b>3</div><div><span class="g">♝︎</span><b>Bishop</b>3</div><div><span class="g">♜︎</span><b>Rook</b>5</div><div><span class="g">♛︎</span><b>Queen</b>9</div><div><span class="g">♚︎</span><b>King</b>Priceless</div></div>',
+      '<p>Trading a knight for a bishop is even. Giving up a rook (5) for a bishop (3) loses material. Before every move, ask: <b>is anything of mine hanging, and can I take anything for free?</b></p>'],
+    tasks:[] }
+];
+/* ---------- App ---------- */
+const $ = id => document.getElementById(id);
+const OPP = c => (c === 'w' ? 'b' : 'w');
+const CNAME = { w: 'White', b: 'Black' };
+
+/* Tabs */
+function showTab(t) {
+  t = t === 'play' ? 'play' : 'learn';
+  $('learn').hidden = t !== 'learn'; $('play').hidden = t !== 'play';
+  for (const b of document.querySelectorAll('[data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === t));
+  if (location.hash.slice(1) !== t) history.replaceState(null, '', '#' + t);
+}
+document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+
+/* ---------- Learn ---------- */
+let progress = new Set();
+try { progress = new Set(JSON.parse(localStorage.getItem('fmc-progress') || '[]')); } catch (e) {}
+const saveProgress = () => { try { localStorage.setItem('fmc-progress', JSON.stringify([...progress])); } catch (e) {} };
+let li = 0, ti = 0, lboard = null, finished = false, token = 0;
+
+function renderNav() {
+  $('lessonNav').innerHTML = LESSONS.map((l, i) =>
+    `<li><button type="button" data-i="${i}" class="${progress.has(l.id) ? 'done' : ''}" ${i === li ? 'aria-current="true"' : ''}>` +
+    `<span class="n">${progress.has(l.id) ? '✓' : i + 1}</span><span class="t">${l.title}</span></button></li>`).join('');
+}
+$('lessonNav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) openLesson(+b.dataset.i); });
+
+function openLesson(i) {
+  li = i; ti = 0; renderNav();
+  const l = LESSONS[i];
+  $('lessonStage').innerHTML =
+    `<div class="board-wrap"><div class="board" id="lessonBoard" role="grid" aria-label="Practice board"></div></div>` +
+    `<div class="panel"><h2>${l.title}</h2><div class="body">${l.body.join('')}</div>` +
+    `<h3>Try it</h3><div id="taskBox"></div><div class="msg" id="fb" role="status" aria-live="polite" hidden></div>` +
+    `<div class="row"><button type="button" class="btn" id="resetBtn">Reset</button>` +
+    `<button type="button" class="btn primary" id="nextBtn" hidden></button></div></div>`;
+  lboard = new Board($('lessonBoard'), {
+    state: parseFen(l.tasks[0] ? l.tasks[0].fen : START_FEN),
+    onMove: handleLessonMove, onReject: (f, t, why) => fb(why, 'bad'), onSquare: handleLessonSquare
+  });
+  $('resetBtn').onclick = loadTask;
+  $('nextBtn').onclick = advance;
+  loadTask();
+}
+function fb(html, kind = '') {
+  const el = $('fb'); if (!el) return;
+  el.hidden = !html; el.className = 'msg ' + kind; el.innerHTML = html || '';
+}
+function curTask() { return LESSONS[li].tasks[ti]; }
+function goalSquares(t) { return t && t.show && t.goal.to ? t.goal.to.map(sqIndex) : []; }
+function loadTask() {
+  token++; finished = false;
+  const l = LESSONS[li], t = curTask();
+  fb('');
+  $('nextBtn').hidden = true;
+  if (!t) {
+    $('taskBox').innerHTML = '<p class="muted">Nothing to practice here. Read the card, then move on.</p>';
+    lboard.locked = false; lboard.set(parseFen(START_FEN));
+    $('nextBtn').hidden = false; $('nextBtn').textContent = li < LESSONS.length - 1 ? 'Next lesson' : 'Start playing';
+    $('resetBtn').hidden = true;
+    return;
+  }
+  $('resetBtn').hidden = false;
+  const n = l.tasks.length;
+  $('taskBox').innerHTML = `<div class="task"><b>${n > 1 ? `Challenge ${ti + 1} of ${n}. ` : ''}</b>${t.prompt}</div>`;
+  lboard.locked = false;
+  lboard.set(parseFen(t.fen), { goals: goalSquares(t) });
+}
+function handleLessonSquare(sq) {
+  const t = curTask();
+  if (!t || !t.goal.click) return false;
+  if (sqName(sq) === t.goal.click) succeed(t);
+  else fb(`That is <b>${sqName(sq)}</b>. Look at the letters and numbers around the edge of the board and try again.`, 'warn');
+  return true;
+}
+function handleLessonMove(m) {
+  const t = curTask(), s = lboard.state, after = makeMove(s, m);
+  const view = { ...after, t: 'w' };
+  if (!t) { lboard.set(view, { last: m }); return; }
+  const g = t.goal;
+  let ok = false;
+  if (g.to) ok = g.to.map(sqIndex).includes(m.to) && (!g.piece || m.piece === g.piece);
+  else if (g.mate) ok = gameStatus(after) === 'checkmate';
+  else if (g.castle) ok = !!m.castle;
+  else if (g.ep) ok = !!m.ep;
+  else if (g.any) ok = true;
+  lboard.set(view, { last: m });
+  if (ok) return succeed(t);
+  lboard.locked = true;
+  const mine = ++token;
+  fb(g.mate ? 'That move is legal, but it is not checkmate: the king still has a way out. Setting the board back up.'
+            : 'That is a legal move, but not what this challenge asks for. Setting the board back up.', 'warn');
+  setTimeout(() => { if (token === mine) loadTask(); }, 1600);
+}
+function succeed(t) {
+  finished = true; lboard.locked = true; lboard.goals = []; lboard.render();
+  fb('<strong>Well done.</strong> ' + t.ok, 'good');
+  const l = LESSONS[li], more = ti < l.tasks.length - 1;
+  if (!more) { progress.add(l.id); saveProgress(); renderNav(); }
+  const b = $('nextBtn'); b.hidden = false;
+  b.textContent = more ? 'Next challenge' : li < LESSONS.length - 1 ? 'Next lesson' : 'Start playing';
+}
+function advance() {
+  const l = LESSONS[li];
+  if (!l.tasks.length) { progress.add(l.id); saveProgress(); }
+  if (l.tasks.length && ti < l.tasks.length - 1) { ti++; loadTask(); return; }
+  if (li < LESSONS.length - 1) { openLesson(li + 1); window.scrollTo({ top: 0 }); }
+  else showTab('play');
+}
+
+/* ---------- Play ---------- */
+const G = { states: [], moves: [], side: 'w', level: 2, busy: false, over: false, hint: null };
+const cur = () => G.states[G.states.length - 1];
+let pboard = null;
+
+function hangingFor(s, color) {
+  const s2 = { ...s, t: OPP(color) };
+  let best = null;
+  for (const m of legalMoves(s2)) {
+    if (!m.cap || m.cap.toLowerCase() === 'k') continue;
+    const va = VAL[m.piece.toLowerCase()], vt = VAL[m.cap.toLowerCase()];
+    const defended = legalMoves(makeMove(s2, m)).some(r => r.to === m.to && r.cap);
+    const gain = defended ? vt - va : vt;
+    if (gain > 0 && (!best || gain > best.gain)) best = { gain, defended, victim: m.cap.toLowerCase(), attacker: m.piece.toLowerCase(), sq: sqName(m.to), from: sqName(m.from) };
+  }
+  return best;
+}
+const OPENING_TIPS = [
+  'Try a center pawn move such as e4 or d4. It claims space and frees your bishops and queen.',
+  'Develop a knight or bishop toward the center. Pieces on the edge do little.',
+  'Keep developing. Try to move each minor piece once before moving any piece twice.',
+  'Consider castling soon. It protects your king and brings a rook into play.',
+  'Before each move, check two things: is any of my pieces hanging, and can I capture something for free?'
+];
+function setCoach(html, kind = '') { const c = $('coach'); c.className = 'msg ' + kind; c.innerHTML = html; }
+
+function renderPlay() {
+  pboard.set(cur(), { last: G.moves.length ? G.moves[G.moves.length - 1].m : null, hint: G.hint });
+  pboard.locked = G.busy || G.over || cur().t !== G.side;
+  // move list
+  if (!G.moves.length) $('moveList').innerHTML = '<span class="muted">No moves yet.</span>';
+  else {
+    let h = '';
+    G.moves.forEach((x, i) => {
+      if (i % 2 === 0) h += `<span class="no">${i / 2 + 1}.</span>`;
+      h += `<span class="${i === G.moves.length - 1 ? 'cur' : ''}">${x.san}</span>`;
+    });
+    $('moveList').innerHTML = h;
+    $('moveList').scrollTop = 1e6;
+  }
+  // captures
+  const taken = { w: [], b: [] }; // pieces captured BY color
+  for (const x of G.moves) if (x.m.cap) taken[colorOf(x.m.piece)].push(x.m.cap);
+  const order = 'qrbnp', sum = a => a.reduce((n, p) => n + VAL[p.toLowerCase()] / 100, 0);
+  const fmt = (c) => {
+    const a = taken[c].slice().sort((x, y) => order.indexOf(x.toLowerCase()) - order.indexOf(y.toLowerCase()));
+    const lead = sum(taken[c]) - sum(taken[OPP(c)]);
+    return a.map(p => `<span class="${colorOf(p)}">${GLYPH[p.toLowerCase()]}</span>`).join('') + (lead > 0 ? `<small>+${lead}</small>` : '');
+  };
+  $('capBottom').innerHTML = fmt(G.side); $('capTop').innerHTML = fmt(OPP(G.side));
+  $('undoBtn').disabled = G.moves.length === 0 || G.busy;
+  $('hintBtn').disabled = G.over || G.busy || cur().t !== G.side;
+}
+
+function applyMove(m) {
+  const s = cur(), san = notate(s, m, legalMoves(s));
+  G.states.push(makeMove(s, m)); G.moves.push({ m, san }); G.hint = null;
+  const st = gameStatus(cur());
+  if (st === 'checkmate' || st === 'stalemate' || st === 'draw') G.over = st;
+}
+function finishCoach(prefix = '') {
+  const s = cur(), st = gameStatus(s);
+  if (G.over === 'checkmate') {
+    const youWon = s.t !== G.side;
+    return setCoach(youWon ? '<strong>Checkmate. You win!</strong> The enemy king is attacked and cannot escape. Press New game to play again.'
+                           : '<strong>Checkmate. The computer wins this one.</strong> Press Undo to see what you could have done differently, or start a new game.', youWon ? 'good' : 'bad');
+  }
+  if (G.over === 'stalemate') return setCoach('<strong>Stalemate.</strong> The player to move has no legal move but is not in check, so the game is a draw.', 'warn');
+  if (G.over) return setCoach('<strong>Draw.</strong> Only kings are left, so nobody can win.', 'warn');
+  const tips = $('showTips').checked;
+  let msg = prefix, kind = '';
+  if (st === 'check') { msg += '<strong>You are in check!</strong> Move your king, block the attack, or capture the attacking piece.'; kind = 'warn'; }
+  else if (tips) {
+    const threat = hangingFor(s, G.side), chance = hangingFor(s, OPP(G.side));
+    if (threat) { msg += `<strong>Careful:</strong> your ${PNAME[threat.victim]} on ${threat.sq} can be captured by their ${PNAME[threat.attacker]}${threat.defended ? ', which is worth less than your piece' : ', and nothing protects it'}.`; kind = 'warn'; }
+    else if (chance) { msg += `<strong>Opportunity:</strong> you can capture their ${PNAME[chance.victim]} on ${chance.sq}${chance.defended ? ', and it is worth more than the piece you capture it with' : ', and it is unprotected'}.`; kind = 'good'; }
+    else msg += OPENING_TIPS[Math.min(Math.floor(G.moves.length / 2), OPENING_TIPS.length - 1)];
+  } else msg += 'Your move.';
+  setCoach(msg, kind);
+}
+function aiTurn() {
+  if (G.over) return renderPlay();
+  G.busy = true; renderPlay();
+  setTimeout(() => {
+    const m = chooseMove(cur(), G.level);
+    G.busy = false;
+    if (!m) return renderPlay();
+    applyMove(m);
+    renderPlay();
+    const x = G.moves[G.moves.length - 1];
+    finishCoach(`${CNAME[OPP(G.side)]} played <b>${x.san}</b>${m.cap ? ` and captured your ${PNAME[m.cap.toLowerCase()]}` : ''}. `);
+  }, 450);
+}
+function onPlayerMove(m) {
+  applyMove(m); renderPlay();
+  if (G.over) return finishCoach();
+  setCoach('Thinking…');
+  aiTurn();
+}
+function newGame() {
+  G.side = $('side').value; G.level = +$('level').value;
+  G.states = [startState()]; G.moves = []; G.over = false; G.busy = false; G.hint = null;
+  pboard.flip = G.side === 'b';
+  renderPlay();
+  setCoach(`You are <b>${CNAME[G.side]}</b>. Click one of your pieces to see where it can go, then click a highlighted square. ` + (G.side === 'w' ? 'White moves first.' : 'The computer plays first.'));
+  if (G.side === 'b') aiTurn();
+}
+pboard = new Board($('playBoard'), {
+  state: startState(), onMove: onPlayerMove,
+  onReject: (f, t, why) => setCoach(why, 'bad'),
+  canSelect: p => colorOf(p) === G.side
+});
+$('newBtn').onclick = newGame;
+$('side').onchange = newGame;
+$('level').onchange = () => { G.level = +$('level').value; setCoach('Computer level changed. It applies from its next move.'); };
+$('showMoves').onchange = () => { pboard.showMoves = $('showMoves').checked; pboard.render(); };
+$('undoBtn').onclick = () => {
+  if (G.busy || !G.moves.length) return;
+  do { G.states.pop(); G.moves.pop(); } while (G.moves.length && cur().t !== G.side);
+  G.over = false; G.hint = null; renderPlay();
+  if (cur().t !== G.side) aiTurn(); else finishCoach('Move taken back. ');
+};
+$('hintBtn').onclick = () => {
+  if (G.over || G.busy || cur().t !== G.side) return;
+  setCoach('Looking for a good move…'); $('hintBtn').disabled = true;
+  setTimeout(() => {
+    const s = cur(), m = hintMove(s);
+    if (!m) return;
+    G.hint = { from: m.from, to: m.to };
+    const after = makeMove(s, m), st = gameStatus(after);
+    let why = m.castle ? 'Castling tucks your king away and activates a rook.' :
+      st === 'checkmate' ? 'This is checkmate.' :
+      m.cap ? `This captures a ${PNAME[m.cap.toLowerCase()]}.` :
+      st === 'check' ? 'This gives check.' : 'It improves your position.';
+    renderPlay();
+    setCoach(`<strong>Hint:</strong> try moving your ${PNAME[m.piece.toLowerCase()]} from ${sqName(m.from)} to ${sqName(m.to)}. ${why}`, 'good');
+  }, 30);
+};
+
+/* Boot */
+renderNav(); openLesson(0);
+newGame();
+showTab(location.hash.slice(1));
+</script>
+
+</body></html>
